@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+
 // ----------------------------
 // API Function
 // ----------------------------
@@ -51,57 +52,53 @@ class _ExcelViewerPageState extends State<ExcelViewerPage> {
   }
 
   // ✅ Load Excel (updated file if available, else asset)
-  Future<void> loadExcel() async {
-    try {
-      List<int>? fileBytes;
+Future<void> loadExcel() async {
+  try {
+    List<int>? fileBytes;
 
-      // 1. Check updated file in documents directory
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = "${dir.path}/developers_with_response.xlsx";
-      final file = File(filePath);
+    // 1. Check updated file in documents directory
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = "${dir.path}/developers_with_response.xlsx";
+    final file = File(filePath);
 
-      if (await file.exists()) {
-        print("📂 Loading updated Excel from: $filePath");
-        fileBytes = await file.readAsBytes();
-      } else {
-        print("📂 Loading original Excel from assets");
-        final data = await rootBundle.load(
-          "assets/excel_api_uploader_developers.xlsx",
-        );
-        fileBytes = data.buffer.asUint8List();
-      }
-
-      // 2. Decode Excel
-      var excel = Excel.decodeBytes(fileBytes);
-      List<DeveloperModel> loaded = [];
-
-      for (var table in excel.tables.keys) {
-        final rows = excel.tables[table]!.rows;
-        loaded = rows.skip(1).map((row) {
-          return DeveloperModel(
-            id: row[0]?.value.toString() ?? '',
-            name: row[1]?.value.toString() ?? '',
-            email: row[2]?.value.toString() ?? '',
-            message: row[3]?.value.toString() ?? '',
-            response: row.length > 4 ? (row[4]?.value.toString() ?? '') : '',
-          );
-        }).toList();
-        break;
-      }
-
-      setState(() {
-        developers = loaded;
-        isLoading = false;
-      });
-    } catch (e) {
-      print("❌ Error loading Excel: $e");
-      setState(() {
-        developers = [];
-        isLoading = false;
-      });
+    if (await file.exists()) {
+      fileBytes = await file.readAsBytes();
+    } else {
+      final data = await rootBundle.load(
+        "assets/excel_api_uploader_developers.xlsx",
+      );
+      fileBytes = data.buffer.asUint8List();
     }
-  }
 
+    // 2. Decode Excel
+    var excel = Excel.decodeBytes(fileBytes);
+    List<DeveloperModel> loaded = [];
+
+    for (var table in excel.tables.keys) {
+      final rows = excel.tables[table]!.rows;
+      loaded = rows.skip(1).map((row) {
+        return DeveloperModel(
+          id: row[0]?.value.toString() ?? '',
+          name: row[1]?.value.toString() ?? '',
+          email: row[2]?.value.toString() ?? '',
+          message: row[3]?.value.toString() ?? '',
+          response: row.length > 4 ? (row[4]?.value.toString() ?? '') : '',
+        );
+      }).toList();
+      break;
+    }
+
+    setState(() {
+      developers = loaded;
+      isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      developers = [];
+      isLoading = false;
+    });
+  }
+}
   // ✅ Open/Share updated Excel
   Future<void> _openUpdatedExcel() async {
     try {
@@ -125,7 +122,7 @@ class _ExcelViewerPageState extends State<ExcelViewerPage> {
 
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
@@ -144,65 +141,65 @@ class _ExcelViewerPageState extends State<ExcelViewerPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : developers.isEmpty
-          ? const Center(child: Text("No data found in Excel"))
-          : ListView.builder(
-              itemCount: developers.length,
-              itemBuilder: (context, index) {
-                final dev = developers[index];
-                return Card(
-                  color: Colors.orange[50],
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.orange,
-                      child: Text(dev.id.replaceAll("D", "")),
-                    ),
-                    title: Text(
-                      dev.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Email: ${dev.email}'),
-                        Text(
-                          'Message: ${dev.message}',
-                          style: const TextStyle(color: Colors.black54),
-                        ),
-                        if (dev.response.isNotEmpty)
-                          Text('Response: ${dev.response}'),
-                      ],
-                    ),
-                    trailing: ElevatedButton.icon(
-                      onPressed: () async {
-                        final success = await postData(dev);
-
-                        setState(() {
-                          dev.response = success
-                              ? "Posted Successfully"
-                              : "Failed to Post";
-                        });
-
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(dev.response)));
-
-                        await saveDevelopersToExcel(developers);
-                      },
-                      icon: const Icon(Icons.upload),
-                      label: const Text("Post"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.orange,
+              ? const Center(child: Text("No data found in Excel"))
+              : ListView.builder(
+                  itemCount: developers.length,
+                  itemBuilder: (context, index) {
+                    final dev = developers[index];
+                    return Card(
+                      color: Colors.orange[50],
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.orange,
+                          child: Text(dev.id.replaceAll("D", "")),
+                        ),
+                        title: Text(
+                          dev.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Email: ${dev.email}'),
+                            Text(
+                              'Message: ${dev.message}',
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                            if (dev.response.isNotEmpty)
+                              Text('Response: ${dev.response}'),
+                          ],
+                        ),
+                        trailing: ElevatedButton.icon(
+                          onPressed: () async {
+                            final success = await postData(dev);
+
+                            setState(() {
+                              dev.response = success
+                                  ? "Posted Successfully"
+                                  : "Failed to Post";
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(dev.response)),
+                            );
+
+                            await saveDevelopersToExcel(developers);
+                          },
+                          icon: const Icon(Icons.upload),
+                          label: const Text("Post"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.orange,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openUpdatedExcel,
         backgroundColor: Colors.orange,
