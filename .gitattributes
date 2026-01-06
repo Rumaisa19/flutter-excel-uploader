@@ -1,0 +1,12 @@
+# Ignore every file by default for language statistics
+* linguist-vendored
+
+
+*.cmake linguist-detectable=false
+*.cpp linguist-detectable=false
+*.h linguist-detectable=false
+*.html linguist-detectable=false
+*.js linguist-detectable=false
+
+*.dart linguist-detectable=true
+*.dart linguist-vendored=false
